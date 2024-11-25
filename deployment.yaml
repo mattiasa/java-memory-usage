@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-memusage
+  labels:
+    app: java-memusage 
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: java-memusage
+
+  template:
+    metadata:
+      labels:
+        app: java-memusage
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: elastic
+                operator: In
+                values:
+                - "true"
+              - key: elastic-rack
+                operator: In
+                values:
+                - n2d-a
+      containers:
+      - name: java-memusage
+        command:
+          - java
+        args:
+          - -verbose:gc
+          - -Xms16G
+          - -Xmx16G
+          - memusage
+          - "8000"
+          - "3000"
+        image: mattiasa/java-memusage
+        resources:
+          requests:
+            cpu: "6"
+            memory: 26Gi  
+      tolerations:
+      - effect: NoSchedule
+        key: elastic
+        value: "true"
